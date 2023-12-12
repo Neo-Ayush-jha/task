@@ -7,7 +7,7 @@ This is a Django project for task management using MySQL as the database.
 ```
 git clone https://github.com/Neo-Ayush-jha/task.git
 cd task
-
+```
 ## Activate enviroment using this command
 
 myenv\Scripts\activate
