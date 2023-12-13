@@ -7,9 +7,11 @@ from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.contrib.auth import authenticate
-from rest_framework.permissions import  IsAuthenticated,AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
+from rest_framework.pagination import PageNumberPagination
+
 
 # ------------------------------------ User Registration View---------------------------------------------------------->
 class UserRegistration(APIView):
@@ -30,13 +32,18 @@ class UserRegistration(APIView):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 # ------------------------------------ UserLogout---------------------------------------------------------------------->
 class UserLogout(APIView):
-    def post(self, request):       
+    def post(self, request):
         try:
             # Logic to update the token in the User model
-            user = request.user  # Assuming you're using request.user for the current user
-            user.remember_token = None  # Set the token to None or some other value to invalidate it
+            user = (
+                request.user
+            )  # Assuming you're using request.user for the current user
+            user.remember_token = (
+                None  # Set the token to None or some other value to invalidate it
+            )
             user.save()
             return Response(
                 {"message": "You have been logged out successfully."},
@@ -47,6 +54,7 @@ class UserLogout(APIView):
                 {"message": "An error occurred while logging out."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
 
 # ------------------------------------ User Login and JWT Token View  UserLoginView------------------------------------>
 class UserLoginView(APIView):
@@ -78,16 +86,21 @@ class UserLoginView(APIView):
             {"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED
         )
 
+
 # ------------------------------------------------Task--------------------------------------------------------------------->
+
 
 # ------------------------------------------------Task Listing--------------------------------------------------------------------->
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def task_list(request):
-    if request.method == "GET":
-        tasks = Task.objects.all()
-        serializer = TaskSerializer(tasks, many=True)
-        return Response(serializer.data)
+    pagination_class = PageNumberPagination()
+    tasks = Task.objects.all()
+    paginated_tasks = pagination_class.paginate_queryset(tasks, request)
+
+    serializer = TaskSerializer(paginated_tasks, many=True)
+    return pagination_class.get_paginated_response(serializer.data)
+
 
 # ------------------------------------------------Task Post/Create--------------------------------------------------------------------->
 @api_view(["POST"])
@@ -101,6 +114,7 @@ def create_task(request):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 # ------------------------------------------------Task Single List--------------------------------------------------------------------->
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
@@ -110,16 +124,34 @@ def get_task(request, pk):
         if request.user != task.owner:
             return Response(
                 {"message": "You do not have permission to view this task."},
-                status=status.HTTP_403_FORBIDDEN
+                status=status.HTTP_403_FORBIDDEN,
             )
-        serializer = TaskSerializer(task)
-        return Response(serializer.data)
+        pagination_class = PageNumberPagination()
+        paginated_task = pagination_class.paginate_queryset([task], request)
+
+        serializer = TaskSerializer(paginated_task, many=True)
+        return pagination_class.get_paginated_response(serializer.data)
     except Task.DoesNotExist:
         return Response(
-            {"message": "No data found with this ID."},
-            status=status.HTTP_404_NOT_FOUND
+            {"message": "No data found with this ID."}, status=status.HTTP_404_NOT_FOUND
         )
 
+# ------------------------------------------------Task Created By User List--------------------------------------------------------------------->
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_user_tasks(request):
+    try:
+        user_tasks = Task.objects.filter(owner=request.user)
+        pagination_class = PageNumberPagination()
+        paginated_user_tasks = pagination_class.paginate_queryset(user_tasks, request)
+        serializer = TaskSerializer(paginated_user_tasks, many=True)
+        return pagination_class.get_paginated_response(serializer.data)
+    
+    except Exception as e:
+        return Response(
+            {"message": f"Error: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 # ------------------------------------------------Task Update--------------------------------------------------------------------->
 @api_view(["PUT"])
 @permission_classes([IsAuthenticated])
@@ -129,7 +161,7 @@ def update_task(request, pk):
         if request.user != task.owner:
             return Response(
                 {"message": "You do not have permission to update this task."},
-                status=status.HTTP_403_FORBIDDEN
+                status=status.HTTP_403_FORBIDDEN,
             )
         request.data["owner"] = request.user.id
         serializer = TaskSerializer(task, data=request.data, partial=False)
@@ -139,10 +171,10 @@ def update_task(request, pk):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     except Task.DoesNotExist:
         return Response(
-            {"message": "No data found with this ID."},
-            status=status.HTTP_404_NOT_FOUND
+            {"message": "No data found with this ID."}, status=status.HTTP_404_NOT_FOUND
         )
-        
+
+
 # ------------------------------------------------Task Delete--------------------------------------------------------------------->
 @api_view(["DELETE"])
 @permission_classes([IsAuthenticated])
@@ -158,19 +190,20 @@ def delete_task(request, pk):
             {"message": "No data found with this ID."}, status=status.HTTP_404_NOT_FOUND
         )
 
+
 # ------------------------------------------------Task Search--------------------------------------------------------------------->
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def search_tasks(request, title_or_description):
     try:
         tasks = Task.objects.filter(
-            Q(title__icontains=title_or_description) | Q(description__icontains=title_or_description),
-            owner=request.user
+            Q(title__icontains=title_or_description)
+            | Q(description__icontains=title_or_description),
+            owner=request.user,
         )
         serializer = TaskSerializer(tasks, many=True)
         return Response(serializer.data)
     except Exception as e:
         return Response(
-            {"message": str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            {"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )

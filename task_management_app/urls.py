@@ -11,5 +11,5 @@ urlpatterns = [
     path('tasks/update/<int:pk>/', update_task, name='update-task'),
     path('tasks/delete/<int:pk>/', delete_task, name='delete-task'),
     path('tasks/search/<str:title_or_description>/', search_tasks, name='search-tasks'),
+    path('tasks/created_by_user/get/', get_user_tasks, name='get_user_tasks'),
 ]
-# README
