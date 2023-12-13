@@ -15,13 +15,13 @@ myenv\Scripts\activate
 
 
 ## Install Dependencies
-pip install django
-pip install -r requirements.txt
+`` pip install django ``
+`` pip install -r requirements.txt ``
 
 
 ## Apply Migrations
-
-python manage.py migrate
+`` python manage.py makemigrations task_management_app ``
+`` python manage.py migrate ``
 
 ## Create Database in your MySQL database
 
@@ -46,7 +46,7 @@ python manage.py migrate
 
 ## Run the Development Server us this code
 
-python manage.py runserver
+`` python manage.py runserver ``
 
 
 Visit http://localhost:8000/api/task/ in your web browser to access the application.
