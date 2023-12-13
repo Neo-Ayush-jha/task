@@ -15,13 +15,13 @@ myenv\Scripts\activate
 
 
 ## Install Dependencies
-pip install django
-pip install -r requirements.txt
+`` pip install django ``
+`` pip install -r requirements.txt ``
 
 
 ## Apply Migrations
-
-python manage.py migrate
+`` python manage.py makemigrations task_management_app ``
+`` python manage.py migrate ``
 
 ## Create Database in your MySQL database
 
@@ -46,7 +46,7 @@ python manage.py migrate
 
 ## Run the Development Server us this code
 
-python manage.py runserver
+`` python manage.py runserver ``
 
 
 Visit http://localhost:8000/api/task/ in your web browser to access the application.
@@ -56,5 +56,7 @@ Visit http://localhost:8000/api/task/ in your web browser to access the applicat
 ## Postman Collection Documentation
 
 Explore the API endpoints and functionalities using our Postman collection documentation: 
-https://documenter.getpostman.com/view/2s9Ykj9iJR?version=latest
-https://documenter.getpostman.com/view/22737106/2s9Ykj9iJR
+
+`` https://documenter.getpostman.com/view/2s9Ykj9iJR?version=latest ``
+
+`` https://documenter.getpostman.com/view/22737106/2s9Ykj9iJR ``
